@@ -7,8 +7,7 @@ const ejs = require('ejs');
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require("body-parser");
-const encrypt = require('mongoose-encryption');
-
+const SHA256 = require("crypto-js/sha256");
 const app = express();
 
 //
@@ -28,8 +27,6 @@ const userSchema = new mongoose.Schema({
 // Using the mongoose encryption plugin to encrypt our Password. For this we define a secretCode which
 // has to be given to the secret attribute in the plugin and also mention which fields have to be
 // encrypted to avoid getting all the attributes encrypted. This step has to be done before the db model is created
-
-userSchema.plugin(encrypt,{secret:process.env.SECRET, encryptedFields: ["password"] });
 
 //Creating the schema model in DB
 const User = mongoose.model("User",userSchema);
@@ -58,7 +55,7 @@ app.post("/register",function(req,res){
 //Using the data entered in the page and storing in the DB by creating a new user
  const newUser = new User({
    email: req.body.username,
-   password: req.body.password
+   password: SHA256(req.body.password).toString()
  });
 
 //Saving the new user data in the DB and checking if there are any error while doing so
@@ -76,7 +73,7 @@ app.post("/login",function(req,res){
 
 //Storing the data entered in variables
 const email = req.body.username;
-const password = req.body.password;
+const password = SHA256(req.body.password).toString();
 
 //Fetching the email ID from the DB and checing with the entered one
 User.findOne({email:email}).then(function(foundUser){
